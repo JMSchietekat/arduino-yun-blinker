@@ -1,9 +1,9 @@
 #include <Arduino.h>
-#include "time_slicer.h"
+#include "time_slicer.hpp"
 
 char input = 0;
 
-ISR(TIMER1_COMPA_vect) // timer compare interrupt service routine
+void timer_callback()
 {
 	digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ^ 1); // toggle LED pin
 }
@@ -13,7 +13,7 @@ void setup()
 	pinMode(LED_BUILTIN, OUTPUT);
 
 	Serial.begin(9600);
-	initTimer1();
+	initTimer1(*timer_callback);
 }
 
 void loop()

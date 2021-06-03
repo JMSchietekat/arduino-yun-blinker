@@ -1,3 +1,4 @@
+#include "config.h"
 #include "serial_cli.h"
 
 bool display = false;
@@ -5,6 +6,13 @@ bool display = false;
 void print_help()
 {
 	Serial.println("Welcome to Justin's Arduino Yun");
+	Serial.print("The firmware version is "); 
+	Serial.print(FIRMWARE_VERSION_MAJOR); 
+	Serial.print("."); 
+	Serial.print(FIRMWARE_VERSION_MINOR); 
+	Serial.print("."); 
+	Serial.print(FIRMWARE_VERSION_PATCH); 
+	Serial.println(); 
 	Serial.println("Valid commands are:");
 	Serial.println("\th - Display help menu.");
 	Serial.println("\ty - Display soft serial.");

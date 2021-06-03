@@ -14,6 +14,7 @@ void print_help()
 void Serial_CLI_init()
 {
 	Serial.begin(9600);
+	while(!Serial){}
 	print_help();
 }
 

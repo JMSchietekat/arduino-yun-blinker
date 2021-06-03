@@ -1,60 +1,50 @@
 #include <Arduino.h>
-#include "time_slicer.hpp"
+#include <SoftwareSerial.h>
+#include "time_slicer.h"
+#include "serial_cli.h"
 
-#define N_TASKS (sizeof(tasks) / (sizeof(Task)))
+SoftwareSerial mySerial(10, 11); // RX, TX
+
+void heart_beat()
+{
+	digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ^ 1);
+}
 
 void task_1_hz()
 {
-	// Serial.write("Hi\n");
-	digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ^ 1); // toggle LED pin
+	heart_beat();
 }
 
 void task_16_hz()
 {
-	int light = map(analogRead(A0), 0, 1023, 8, 24);
-	static int cnt = 1;
-	if (light % cnt == 0)
-	{
-		digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ^ 1); // toggle LED pin	
-		cnt = 1;	
-	}
+	// int light = map(analogRead(A0), 0, 1023, 8, 24);
+	// static int cnt = 1;
+	// if (light % cnt == 0)
+	// {
+	// digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ^ 1); // toggle LED pin
+	// 	cnt = 1;
+	// }
 
-	cnt += 1;
+	// cnt += 1;
 }
 
 void task_512_hz()
 {
-	while (Serial.available() > 0)
+	Serial_CLI_loop();
+
+	while (mySerial.available())
 	{
-		char input = Serial.read();
+		uint8_t input = mySerial.read();
+		// if (display)
+		// {
+		// 	if (input == 0xAA)
+		// 	{
+		// 		Serial.println();
+		// 	}
 
-		Serial.print(input);
-	}
-}
-
-struct Task
-{
-	void (*task)(void);
-	int16_t tick_512ths;
-} typedef Task;
-
-Task tasks[] = {
-	{task_1_hz, 512},
-	{task_16_hz, 32},
-	{task_512_hz, 1}};
-
-void time_ticker()
-{
-	static uint16_t cnt = 0;
-
-	cnt += 1;
-
-	for (uint8_t i = 0; i < N_TASKS; i++)
-	{
-		if (cnt % tasks[i].tick_512ths == 0)
-		{
-			tasks[i].task();
-		}
+		// 	Serial.print(input, HEX);
+		// 	Serial.print(' ');
+		// }
 	}
 }
 
@@ -63,8 +53,12 @@ void setup()
 	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(A0, INPUT_PULLUP);
 
-	Serial.begin(9600);
-	initTimer1(512, *time_ticker);
+	mySerial.begin(2400);
+
+	TimeSlicer_init();
+	TimeSlicer_addTask({task_1_hz, 512});
+	TimeSlicer_addTask({task_16_hz, 32});
+	TimeSlicer_addTask({task_512_hz, 1});
 }
 
 void loop()

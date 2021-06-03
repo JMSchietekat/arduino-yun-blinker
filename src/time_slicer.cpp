@@ -1,27 +1,33 @@
-#include "time_slicer.hpp"
+#include "time_slicer.h"
 
-void (*fn)();
+#define MAX_TASKS 8
 
-void initTimer1(double frequency_hz, void (*timeout_callback)())
+void time_ticker();
+
+Task tasks[MAX_TASKS];
+uint8_t task_count = 0;
+
+void time_ticker()
 {
-	noInterrupts(); // disable all interrupts
-	TCCR1A = 0;		// Timer/Counter1 Control Register A
-	TCCR1B = 0;		// Timer/Counter1 Control Register B
-	TCNT1 = 0;		// Timer/Counter1
+	static uint16_t cnt = 0;
 
-	OCR1A = (int)(16e6 / (1.0 * frequency_hz)); // compare match register 16MHz/1/frequency_hz
-	TCCR1B |= (1 << WGM12);			   // CTC mode
-	TCCR1B |= (0 << CS12);			   // 1 prescaler
-	TCCR1B |= (0 << CS11);			   
-	TCCR1B |= (1 << CS10);			   
-	TIMSK1 |= (1 << OCIE1A);		   // enable timer compare interrupt
+	cnt += 1;
 
-	fn = timeout_callback;
-
-	interrupts(); // enable all interrupts
+	for (uint8_t i = 0; i < task_count; i++)
+	{
+		if (cnt % tasks[i].tick_512ths == 0)
+		{
+			tasks[i].task();
+		}
+	}
 }
 
-ISR(TIMER1_COMPA_vect) // timer compare interrupt service routine
+void TimeSlicer_init()
 {
-	fn();
+	TIMER_init_timer_1(512, *time_ticker);
+}
+
+void TimeSlicer_addTask(Task task)
+{
+	tasks[task_count++] = task;
 }
